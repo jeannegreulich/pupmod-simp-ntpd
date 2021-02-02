@@ -1,0 +1,81 @@
+<%- | Optional[String]        $config_content,
+      Ntpd::Servers           $servers,
+      Array                   $logconfig,
+      Array[Ntpd::Restrict]   $default_restrict,
+      Array[Ntpd::Restrict]   $default_restrict6,
+      Optional[Ntpd::Discard] $discard,
+      String                  $default_options,
+      Integer                 $stratum,
+      String                  $virtual,
+      Array[Simplib::IP::V4]  $admin_hosts,
+      Array[Simplib::IP::V6]  $admin_hosts6,
+      Numeric                 $broadcastdelay,
+      Boolean                 $disable_monitor,
+      Optional[String]        $extra_content,
+| -%>
+<% if $config_content  { -%>
+# Begin user-defined configuration
+<%= $config_content %>
+# End user-defined configuration
+<% } else { -%>
+<%   unless empty($logconfig) { -%>
+logconfig <%= $logconfig.join(' ') %>
+
+<%   } -%>
+<%   if $virtual != 'physical' { -%>
+tinker panic 0
+<%   } -%>
+
+<%   unless $discard =~ Undef { -%>
+discard<% $discard.each |$key, $value| { %> <%= $key %> <%= $value %><% } %>
+<%   } -%>
+<%   unless empty($default_restrict) { -%>
+restrict default <%= $default_restrict.join(' ') %>
+<%   } -%>
+<%   unless empty($default_restrict6) { -%>
+restrict -6 default <%= $default_restrict6.join(' ') %>
+<%   } -%>
+
+<%   $admin_hosts.each |$admin_host| { -%>
+restrict <%= $admin_host %>
+<%   } -%>
+<%   $admin_hosts6.each |$admin_host| { -%>
+restrict -6 <%= $admin_host %>
+<%   } -%>
+
+<%   if empty($servers) { -%>
+server 127.127.1.0 # local clock
+fudge 127.127.1.0 stratum <%= $stratum %>
+
+<%   } else  { -%>
+<%     if $virtual != 'vmware'  { -%>
+server 127.127.1.0 # local clock
+fudge 127.127.1.0 stratum 10
+
+<%     } -%>
+<%   } -%>
+<%   if $servers =~ Array { -%>
+<%     $servers.each |$x| { -%>
+server <%= $x %> <%= $default_options %>
+<%     } -%>
+<%   } else { -%>
+<%     $servers.keys.sort.each  |$ntp_server| { -%>
+<%       if $servers[$ntp_server] and !empty($servers[$ntp_server]) { -%>
+server <%= $ntp_server %> <%= $servers[$ntp_server].join(' ') %>
+<%       } else { -%>
+server <%= $ntp_server %> <%= $default_options %>
+<%       } -%>
+<%     } -%>
+<%   } -%>
+driftfile /var/lib/ntp/drift
+broadcastdelay <%= $broadcastdelay %>
+<%   if $disable_monitor { -%>
+disable monitor
+<%   } -%>
+<%   if $extra_content { -%>
+
+# Begin raw user content
+<%= $extra_content %>
+# End raw user content
+<%   } -%>
+<% } -%>

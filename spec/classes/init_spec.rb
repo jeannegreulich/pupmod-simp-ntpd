@@ -24,7 +24,6 @@ describe 'ntpd' do
             server 127.127.1.0 # local clock
             fudge 127.127.1.0 stratum 2
 
-
             driftfile /var/lib/ntp/drift
             broadcastdelay 0.004
             disable monitor
@@ -187,7 +186,6 @@ describe 'ntpd' do
 
             server 127.127.1.0 # local clock
             fudge 127.127.1.0 stratum 2
-
 
             driftfile /var/lib/ntp/drift
             broadcastdelay 0.004

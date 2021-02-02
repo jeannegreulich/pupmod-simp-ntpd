@@ -9,11 +9,17 @@ HOSTS:
   el7:
     roles:
       - client
-      # roles migrated from now-removed el6 node(s):
       - default
       - master
     platform: el-7-x86_64
     box: centos/7
+    hypervisor: <%= hypervisor %>
+
+  el8:
+    roles:
+      - client
+    platform: el-8-x86_64
+    box: centos/8
     hypervisor: <%= hypervisor %>
 
 CONFIG:

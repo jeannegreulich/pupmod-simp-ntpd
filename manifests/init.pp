@@ -112,7 +112,7 @@
 #
 class ntpd (
   String[1]                       $ntpd_options,
-  Ntpd::Servers                   $servers                = simplib::lookup('simp_options::ntpd::servers', { 'default_value' => {} }),
+  Ntpd::Servers                   $servers                = simplib::lookup('simp_options::ntp::servers', { 'default_value' => {} }),
   Integer[0]                      $stratum                = 2,
   Array[String[1]]                $logconfig              = ['=syncall','+clockall'],
   Numeric                         $broadcastdelay         = 0.004,
@@ -154,8 +154,23 @@ class ntpd (
   }
 
   concat::fragment { 'main_ntp_configuration':
-    target  => '/etc/ntp.conf',
-    content => template("${module_name}/ntp.conf.erb"),
+    target                => '/etc/ntp.conf',
+    content               => epp("${module_name}/ntp.conf.epp", {
+      'config_content'    => $config_content,
+      'servers'           => $servers,
+      'logconfig'         => $logconfig,
+      'default_restrict'  => $default_restrict,
+      'default_restrict6' => $default_restrict6,
+      'discard'           => $discard,
+      'default_options'   => $default_options.join(' '),
+      'stratum'           => $stratum,
+      'virtual'           => $facts['virtual'],
+      'admin_hosts'       => $admin_hosts,
+      'admin_hosts6'      => $admin_hosts6,
+      'broadcastdelay'    => $broadcastdelay,
+      'disable_monitor'   => $disable_monitor,
+      'extra_content'     => $extra_content,
+    }),
     order   => 0,
   }
 
